@@ -16,13 +16,10 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
   default_identity_type                 = local.cosmosdb_account[each.key].default_identity_type
   kind                                  = local.cosmosdb_account[each.key].kind
   ip_range_filter                       = local.cosmosdb_account[each.key].ip_range_filter
-  enable_free_tier                      = local.cosmosdb_account[each.key].enable_free_tier
   analytical_storage_enabled            = local.cosmosdb_account[each.key].analytical_storage_enabled
-  enable_automatic_failover             = local.cosmosdb_account[each.key].enable_automatic_failover
   public_network_access_enabled         = local.cosmosdb_account[each.key].public_network_access_enabled
   is_virtual_network_filter_enabled     = local.cosmosdb_account[each.key].is_virtual_network_filter_enabled
   key_vault_key_id                      = local.cosmosdb_account[each.key].key_vault_key_id
-  enable_multiple_write_locations       = local.cosmosdb_account[each.key].enable_multiple_write_locations
   access_key_metadata_writes_enabled    = local.cosmosdb_account[each.key].access_key_metadata_writes_enabled
   mongo_server_version                  = local.cosmosdb_account[each.key].mongo_server_version
   network_acl_bypass_for_azure_services = local.cosmosdb_account[each.key].network_acl_bypass_for_azure_services
@@ -73,6 +70,7 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
     for_each = local.cosmosdb_account[each.key].backup.type != "" ? [1] : []
     content {
       type                = local.cosmosdb_account[each.key].backup.type
+      tier                = local.cosmosdb_account[each.key].backup.tier
       interval_in_minutes = local.cosmosdb_account[each.key].backup.interval_in_minutes
       retention_in_hours  = local.cosmosdb_account[each.key].backup.retention_in_hours
       storage_redundancy  = local.cosmosdb_account[each.key].backup.storage_redundancy

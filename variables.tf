@@ -24,13 +24,10 @@ locals {
       default_identity_type                 = "FirstPartyIdentity"
       kind                                  = "MongoDB"
       ip_range_filter                       = null
-      enable_free_tier                      = false
       analytical_storage_enabled            = false
-      enable_automatic_failover             = true
       public_network_access_enabled         = true
       is_virtual_network_filter_enabled     = true
       key_vault_key_id                      = null
-      enable_multiple_write_locations       = false
       access_key_metadata_writes_enabled    = true
       network_acl_bypass_for_azure_services = false
       network_acl_bypass_ids                = null
@@ -53,7 +50,8 @@ locals {
       analytical_storage = {}
       capacity           = {}
       backup = {
-        type                = ""
+        type                = "Continuous"
+        tier                = "Continuous30Days"
         interval_in_minutes = null
         retention_in_hours  = null
         storage_redundancy  = null

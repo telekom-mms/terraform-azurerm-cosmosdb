@@ -49,7 +49,6 @@ module "cosmosdb" {
       location                   = "westeurope"
       resource_group_name        = "service-rg"
       kind                       = "MongoDB"
-      enable_free_tier           = true
       analytical_storage_enabled = false
       key_vault_key_id           = ""
       mongo_server_version       = "4.0"
