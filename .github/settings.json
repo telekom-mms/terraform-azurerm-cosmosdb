@@ -1,9 +1,9 @@
 {
   "repos": {
-    "description": "A Terraform module that manages the tpl_resources resources from the azurerm provider.",
+    "description": "A Terraform module that manages the azurerm cosmosdb resources from the azurerm provider.",
     "visibility": "public",
     "default_branch": "main",
-    "homepage": "https://telekom-mms.github.io/terraform-template",
+    "homepage": "https://telekom-mms.github.io/terraform-azurerm-cosmosdb",
     "topics": [
       "terraform",
       "azure"
