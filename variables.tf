@@ -1,40 +1,47 @@
 variable "cosmosdb_account" {
   type        = any
   default     = {}
-  description = "resource definition, default settings are defined within locals and merged with var settings"
+  description = "Resource definition, default settings are defined within locals and merged with var settings. For more information look at [Outputs](#Outputs)."
 }
+
 variable "cosmosdb_mongo_collection" {
   type        = any
   default     = {}
-  description = "resource definition, default settings are defined within locals and merged with var settings"
+  description = "Resource definition, default settings are defined within locals and merged with var settings. For more information look at [Outputs](#Outputs)."
 }
+
 variable "cosmosdb_mongo_database" {
   type        = any
   default     = {}
-  description = "resource definition, default settings are defined within locals and merged with var settings"
+  description = "Resource definition, default settings are defined within locals and merged with var settings. For more information look at [Outputs](#Outputs)."
 }
 
 locals {
   default = {
-    # resource definition
+    // resource definition
     cosmosdb_account = {
       name                                  = ""
       offer_type                            = "Standard"
       create_mode                           = null
-      default_identity_type                 = "FirstPartyIdentity"
-      kind                                  = "MongoDB"
+      default_identity_type                 = null
+      kind                                  = "MongoDB" // defined default
       ip_range_filter                       = null
-      enable_free_tier                      = false
-      analytical_storage_enabled            = false
-      enable_automatic_failover             = true
-      public_network_access_enabled         = true
-      is_virtual_network_filter_enabled     = true
+      free_tier_enabled                     = null
+      analytical_storage_enabled            = null
+      automatic_failover_enabled            = true // defined default
+      public_network_access_enabled         = null
+      is_virtual_network_filter_enabled     = true // defined default
       key_vault_key_id                      = null
-      enable_multiple_write_locations       = false
-      access_key_metadata_writes_enabled    = true
+      multiple_write_locations_enabled      = false
+      access_key_metadata_writes_enabled    = null
       network_acl_bypass_for_azure_services = false
       network_acl_bypass_ids                = null
-      local_authentication_disabled         = false
+      local_authentication_disabled         = null
+      mongo_server_version                  = null
+      minimal_tls_version                   = null
+      partition_merge_enabled               = null
+      burst_capacity_enabled                = null
+      managed_hsm_key_id                    = null
       consistency_policy = {
         consistency_level       = "Strong"
         max_interval_in_seconds = null
@@ -66,6 +73,7 @@ locals {
       }
       tags = {}
     }
+
     cosmosdb_mongo_collection = {
       name                   = ""
       analytical_storage_ttl = null
@@ -74,27 +82,30 @@ locals {
       index                  = {}
       autoscale_settings     = {}
     }
+
     cosmosdb_mongo_database = {
       throughput         = null
       autoscale_settings = {}
     }
   }
 
-  # compare and merge custom and default values
+  // compare and merge custom and default values
   cosmosdb_account_values = {
     for cosmosdb_account in keys(var.cosmosdb_account) :
     cosmosdb_account => merge(local.default.cosmosdb_account, var.cosmosdb_account[cosmosdb_account])
   }
+
   cosmosdb_mongo_collection_values = {
     for cosmosdb_mongo_collection in keys(var.cosmosdb_mongo_collection) :
     cosmosdb_mongo_collection => merge(local.default.cosmosdb_mongo_collection, var.cosmosdb_mongo_collection[cosmosdb_mongo_collection])
   }
+
   cosmosdb_mongo_database_values = {
     for cosmosdb_mongo_database in keys(var.cosmosdb_mongo_database) :
     cosmosdb_mongo_database => merge(local.default.cosmosdb_mongo_database, var.cosmosdb_mongo_database[cosmosdb_mongo_database])
   }
 
-  # merge all custom and default values
+  // deep merge of all custom and default values
   cosmosdb_account = {
     for cosmosdb_account in keys(var.cosmosdb_account) :
     cosmosdb_account => merge(
@@ -116,6 +127,7 @@ locals {
       }
     )
   }
+
   cosmosdb_mongo_collection = {
     for cosmosdb_mongo_collection in keys(var.cosmosdb_mongo_collection) :
     cosmosdb_mongo_collection => merge(

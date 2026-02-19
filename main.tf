@@ -1,9 +1,11 @@
 /**
  * # cosmosdb
  *
- * This module manages Azure CosmosDB.
+ * This module manages the azurerm cosmosdb resources, see https://registry.terraform.io/providers/azurerm/latest/docs.
  *
-*/
+ * For more information about the module structure see https://telekom-mms.github.io/terraform-template.
+ *
+ */
 
 resource "azurerm_cosmosdb_account" "cosmosdb_account" {
   for_each = var.cosmosdb_account
@@ -16,35 +18,42 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
   default_identity_type                 = local.cosmosdb_account[each.key].default_identity_type
   kind                                  = local.cosmosdb_account[each.key].kind
   ip_range_filter                       = local.cosmosdb_account[each.key].ip_range_filter
-  enable_free_tier                      = local.cosmosdb_account[each.key].enable_free_tier
+  free_tier_enabled                     = local.cosmosdb_account[each.key].free_tier_enabled
   analytical_storage_enabled            = local.cosmosdb_account[each.key].analytical_storage_enabled
-  enable_automatic_failover             = local.cosmosdb_account[each.key].enable_automatic_failover
+  automatic_failover_enabled            = local.cosmosdb_account[each.key].automatic_failover_enabled
   public_network_access_enabled         = local.cosmosdb_account[each.key].public_network_access_enabled
   is_virtual_network_filter_enabled     = local.cosmosdb_account[each.key].is_virtual_network_filter_enabled
   key_vault_key_id                      = local.cosmosdb_account[each.key].key_vault_key_id
-  enable_multiple_write_locations       = local.cosmosdb_account[each.key].enable_multiple_write_locations
+  multiple_write_locations_enabled      = local.cosmosdb_account[each.key].multiple_write_locations_enabled
   access_key_metadata_writes_enabled    = local.cosmosdb_account[each.key].access_key_metadata_writes_enabled
   mongo_server_version                  = local.cosmosdb_account[each.key].mongo_server_version
+  minimal_tls_version                   = local.cosmosdb_account[each.key].minimal_tls_version
+  partition_merge_enabled               = local.cosmosdb_account[each.key].partition_merge_enabled
+  burst_capacity_enabled                = local.cosmosdb_account[each.key].burst_capacity_enabled
+  managed_hsm_key_id                    = local.cosmosdb_account[each.key].managed_hsm_key_id
   network_acl_bypass_for_azure_services = local.cosmosdb_account[each.key].network_acl_bypass_for_azure_services
   network_acl_bypass_ids                = local.cosmosdb_account[each.key].network_acl_bypass_ids
   local_authentication_disabled         = local.cosmosdb_account[each.key].local_authentication_disabled
 
-  consistency_policy {
-    consistency_level       = local.cosmosdb_account[each.key].consistency_policy.consistency_level
-    max_interval_in_seconds = local.cosmosdb_account[each.key].consistency_policy.max_interval_in_seconds
-    max_staleness_prefix    = local.cosmosdb_account[each.key].consistency_policy.max_staleness_prefix
+  dynamic "consistency_policy" {
+    for_each = local.cosmosdb_account[each.key].consistency_policy.consistency_level != null ? [1] : []
+    content {
+      consistency_level       = local.cosmosdb_account[each.key].consistency_policy.consistency_level
+      max_interval_in_seconds = local.cosmosdb_account[each.key].consistency_policy.max_interval_in_seconds
+      max_staleness_prefix    = local.cosmosdb_account[each.key].consistency_policy.max_staleness_prefix
+    }
   }
 
   geo_location {
-    location          = local.cosmosdb_account[each.key].location == "" ? local.cosmosdb_account[each.key].location : local.cosmosdb_account[each.key].location
+    location          = local.cosmosdb_account[each.key].geo_location.location == "" ? local.cosmosdb_account[each.key].location : local.cosmosdb_account[each.key].geo_location.location
     failover_priority = local.cosmosdb_account[each.key].geo_location.failover_priority
     zone_redundant    = local.cosmosdb_account[each.key].geo_location.zone_redundant
   }
 
   dynamic "capabilities" {
-    for_each = local.cosmosdb_account[each.key].capabilities
+    for_each = local.cosmosdb_account[each.key].capabilities == null ? [] : local.cosmosdb_account[each.key].capabilities
     content {
-      name = local.cosmosdb_account[each.key].capabilities[capabilities.key].name == "" ? local.cosmosdb_account[each.key].capabilities[capabilities.key] : local.cosmosdb_account[each.key].capabilities[capabilities.key].name
+      name = capabilities.value.name == null ? capabilities.value : capabilities.value.name
     }
   }
 
@@ -69,6 +78,7 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
       total_throughput_limit = local.cosmosdb_account[each.key].capacity.total_throughput_limit
     }
   }
+
   dynamic "backup" {
     for_each = local.cosmosdb_account[each.key].backup.type != "" ? [1] : []
     content {
@@ -154,5 +164,4 @@ resource "azurerm_cosmosdb_mongo_database" "cosmosdb_mongo_database" {
       max_throughput = local.cosmosdb_mongo_database[each.key].autoscale_settings.max_throughput
     }
   }
-
 }
