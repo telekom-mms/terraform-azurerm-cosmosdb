@@ -5,8 +5,11 @@
     "default_branch": "main",
     "homepage": "https://telekom-mms.github.io/terraform-azurerm-cosmosdb",
     "topics": [
-      "terraform",
-      "azure"
+      "azure",
+      "cosmosdb-account",
+      "cosmosdb-mongo-collection",
+      "cosmosdb-mongo-database",
+      "terraform"
     ]
   }
 }
