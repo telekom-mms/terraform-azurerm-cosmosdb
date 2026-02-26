@@ -53,7 +53,7 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
   dynamic "capabilities" {
     for_each = local.cosmosdb_account[each.key].capabilities == null ? [] : local.cosmosdb_account[each.key].capabilities
     content {
-      name = capabilities.value.name == null ? capabilities.value : capabilities.value.name
+      name = capabilities.value.name == null ? capabilities.key : capabilities.value.name
     }
   }
 
