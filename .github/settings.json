@@ -1,0 +1,15 @@
+{
+  "repos": {
+    "description": "A Terraform module that manages the azurerm cosmosdb resources from the azurerm provider.",
+    "visibility": "public",
+    "default_branch": "main",
+    "homepage": "https://telekom-mms.github.io/terraform-azurerm-cosmosdb",
+    "topics": [
+      "azure",
+      "cosmosdb-account",
+      "cosmosdb-mongo-collection",
+      "cosmosdb-mongo-database",
+      "terraform"
+    ]
+  }
+}

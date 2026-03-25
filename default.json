@@ -1,0 +1,12 @@
+{
+  "regexManagers": [
+    {
+      "description": "Update Terraform Versions",
+      "fileMatch": ["^versions\\.tf$"],
+      "matchStrings": [
+        "\\s*#\\s*renovate:\\s*datasource=(?<datasource>.*?) depName=(?<depName>.*?)?\\s.*?version\\s.*=\\s.*\"(>=|<=|)(?<currentValue>.*)\""
+      ],
+      "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
+    }
+  ]
+}
