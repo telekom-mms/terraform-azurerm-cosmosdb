@@ -10,10 +10,6 @@ module "cosmosdb" {
       consistency_policy = {
         consistency_level = "Strong"
       }
-      geo_location = {
-        location          = "westeurope"
-        failover_priority = 0
-      }
     }
   }
 }
