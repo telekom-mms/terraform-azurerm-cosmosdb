@@ -30,35 +30,34 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
   minimal_tls_version                   = local.cosmosdb_account[each.key].minimal_tls_version
   partition_merge_enabled               = local.cosmosdb_account[each.key].partition_merge_enabled
   burst_capacity_enabled                = local.cosmosdb_account[each.key].burst_capacity_enabled
-  managed_hsm_key_id                    = local.cosmosdb_account[each.key].managed_hsm_key_id
   network_acl_bypass_for_azure_services = local.cosmosdb_account[each.key].network_acl_bypass_for_azure_services
   network_acl_bypass_ids                = local.cosmosdb_account[each.key].network_acl_bypass_ids
   local_authentication_disabled         = local.cosmosdb_account[each.key].local_authentication_disabled
 
-  dynamic "consistency_policy" {
-    for_each = local.cosmosdb_account[each.key].consistency_policy.consistency_level != null ? [1] : []
+  consistency_policy {
+    consistency_level       = local.cosmosdb_account[each.key].consistency_policy.consistency_level
+    max_interval_in_seconds = local.cosmosdb_account[each.key].consistency_policy.max_interval_in_seconds
+    max_staleness_prefix    = local.cosmosdb_account[each.key].consistency_policy.max_staleness_prefix
+  }
+
+  dynamic "geo_location" {
+    for_each = local.cosmosdb_account[each.key].geo_location
     content {
-      consistency_level       = local.cosmosdb_account[each.key].consistency_policy.consistency_level
-      max_interval_in_seconds = local.cosmosdb_account[each.key].consistency_policy.max_interval_in_seconds
-      max_staleness_prefix    = local.cosmosdb_account[each.key].consistency_policy.max_staleness_prefix
+      location          = coalesce(geo_location.value.location, local.cosmosdb_account[each.key].location)
+      failover_priority = geo_location.value.failover_priority
+      zone_redundant    = geo_location.value.zone_redundant
     }
   }
 
-  geo_location {
-    location          = local.cosmosdb_account[each.key].geo_location.location == "" ? local.cosmosdb_account[each.key].location : local.cosmosdb_account[each.key].geo_location.location
-    failover_priority = local.cosmosdb_account[each.key].geo_location.failover_priority
-    zone_redundant    = local.cosmosdb_account[each.key].geo_location.zone_redundant
-  }
-
   dynamic "capabilities" {
-    for_each = local.cosmosdb_account[each.key].capabilities == null ? [] : local.cosmosdb_account[each.key].capabilities
+    for_each = try(length([for v in values(local.cosmosdb_account[each.key].capabilities) : v if v != null]) > 0, false) ? local.cosmosdb_account[each.key].capabilities : {}
     content {
-      name = local.cosmosdb_account[each.key].capabilities[capabilities.key].name == null ? capabilities.key : local.cosmosdb_account[each.key].capabilities[capabilities.key].name
+      name = local.cosmosdb_account[each.key].capabilities[capabilities.key].name
     }
   }
 
   dynamic "virtual_network_rule" {
-    for_each = local.cosmosdb_account[each.key].virtual_network_rule.id != "" ? [1] : []
+    for_each = try(local.cosmosdb_account[each.key].virtual_network_rule.id != null && local.cosmosdb_account[each.key].virtual_network_rule.id != "", false) ? [1] : []
     content {
       id                                   = local.cosmosdb_account[each.key].virtual_network_rule.id
       ignore_missing_vnet_service_endpoint = local.cosmosdb_account[each.key].virtual_network_rule.ignore_missing_vnet_service_endpoint
@@ -66,23 +65,24 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
   }
 
   dynamic "analytical_storage" {
-    for_each = local.cosmosdb_account[each.key].analytical_storage != {} ? [1] : []
+    for_each = try(length([for v in values(local.cosmosdb_account[each.key].analytical_storage) : v if v != null]) > 0, false) ? [1] : []
     content {
       schema_type = local.cosmosdb_account[each.key].analytical_storage.schema_type
     }
   }
 
   dynamic "capacity" {
-    for_each = local.cosmosdb_account[each.key].capacity != {} ? [1] : []
+    for_each = try(length([for v in values(local.cosmosdb_account[each.key].capacity) : v if v != null]) > 0, false) ? [1] : []
     content {
       total_throughput_limit = local.cosmosdb_account[each.key].capacity.total_throughput_limit
     }
   }
 
   dynamic "backup" {
-    for_each = local.cosmosdb_account[each.key].backup.type != "" ? [1] : []
+    for_each = try(local.cosmosdb_account[each.key].backup.type != null && local.cosmosdb_account[each.key].backup.type != "", false) ? [1] : []
     content {
       type                = local.cosmosdb_account[each.key].backup.type
+      tier                = local.cosmosdb_account[each.key].backup.tier
       interval_in_minutes = local.cosmosdb_account[each.key].backup.interval_in_minutes
       retention_in_hours  = local.cosmosdb_account[each.key].backup.retention_in_hours
       storage_redundancy  = local.cosmosdb_account[each.key].backup.storage_redundancy
@@ -90,7 +90,8 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
   }
 
   dynamic "cors_rule" {
-    for_each = local.cosmosdb_account[each.key].cors_rule != {} ? [1] : []
+    for_each = try(length([for v in values(local.cosmosdb_account[each.key].cors_rule) : v if v != null]) > 0, false) ? [1] : []
+
     content {
       allowed_headers    = local.cosmosdb_account[each.key].cors_rule.allowed_headers
       allowed_methods    = local.cosmosdb_account[each.key].cors_rule.allowed_methods
@@ -101,21 +102,39 @@ resource "azurerm_cosmosdb_account" "cosmosdb_account" {
   }
 
   dynamic "identity" {
-    for_each = local.cosmosdb_account[each.key].identity != {} ? [1] : []
+    for_each = try(length([for v in values(local.cosmosdb_account[each.key].identity) : v if v != null]) > 0, false) ? [1] : []
+
     content {
-      type = local.cosmosdb_account[each.key].identity.type
+      type         = local.cosmosdb_account[each.key].identity.type
+      identity_ids = local.cosmosdb_account[each.key].identity.identity_ids
     }
   }
 
   dynamic "restore" {
-    for_each = local.cosmosdb_account[each.key].restore.source_cosmosdb_account_id != "" ? [1] : []
+    for_each = try(local.cosmosdb_account[each.key].restore.source_cosmosdb_account_id != null && local.cosmosdb_account[each.key].restore.source_cosmosdb_account_id != "", false) ? [1] : []
     content {
       source_cosmosdb_account_id = local.cosmosdb_account[each.key].restore.source_cosmosdb_account_id
       restore_timestamp_in_utc   = local.cosmosdb_account[each.key].restore.restore_timestamp_in_utc
-      database {
-        name             = local.cosmosdb_account[each.key].restore.database.name
-        collection_names = local.cosmosdb_account[each.key].restore.database.collection_names
+
+      dynamic "database" {
+        for_each = try(local.cosmosdb_account[each.key].restore.database != null, false) ? [1] : []
+
+        content {
+          name             = local.cosmosdb_account[each.key].restore.database.name
+          collection_names = local.cosmosdb_account[each.key].restore.database.collection_names
+        }
       }
+
+      dynamic "gremlin_database" {
+        for_each = try(length([for v in values(local.cosmosdb_account[each.key].restore.gremlin_database) : v if v != null]) > 0, false) ? local.cosmosdb_account[each.key].restore.gremlin_database : []
+
+        content {
+          name        = gremlin_database.value.name
+          graph_names = gremlin_database.value.graph_names
+        }
+      }
+
+      tables_to_restore = local.cosmosdb_account[each.key].restore.tables_to_restore
     }
   }
 
@@ -135,15 +154,15 @@ resource "azurerm_cosmosdb_mongo_collection" "cosmosdb_mongo_collection" {
   throughput             = local.cosmosdb_mongo_collection[each.key].throughput
 
   dynamic "index" {
-    for_each = local.cosmosdb_mongo_collection[each.key].index.keys != {} ? [1] : []
+    for_each = try(length([for v in values(local.cosmosdb_mongo_collection[each.key].index) : v if v != null]) > 0, false) ? local.cosmosdb_mongo_collection[each.key].index : {}
     content {
-      keys   = local.cosmosdb_mongo_collection[each.key].index.keys
-      unique = local.cosmosdb_mongo_collection[each.key].index.unique
+      keys   = index.value.keys
+      unique = index.value.unique
     }
   }
 
   dynamic "autoscale_settings" {
-    for_each = local.cosmosdb_mongo_collection[each.key].autoscale_settings != {} ? [1] : []
+    for_each = try(length([for v in values(local.cosmosdb_mongo_collection[each.key].autoscale_settings) : v if v != null]) > 0, false) ? [1] : []
     content {
       max_throughput = local.cosmosdb_mongo_collection[each.key].autoscale_settings.max_throughput
     }
@@ -159,7 +178,7 @@ resource "azurerm_cosmosdb_mongo_database" "cosmosdb_mongo_database" {
   throughput          = local.cosmosdb_mongo_database[each.key].throughput
 
   dynamic "autoscale_settings" {
-    for_each = local.cosmosdb_mongo_database[each.key].autoscale_settings != {} ? [1] : []
+    for_each = try(length([for v in values(local.cosmosdb_mongo_database[each.key].autoscale_settings) : v if v != null]) > 0, false) ? [1] : []
     content {
       max_throughput = local.cosmosdb_mongo_database[each.key].autoscale_settings.max_throughput
     }
