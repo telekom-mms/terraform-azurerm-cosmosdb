@@ -41,7 +41,6 @@ locals {
       minimal_tls_version                   = null
       partition_merge_enabled               = null
       burst_capacity_enabled                = null
-      managed_hsm_key_id                    = null
       consistency_policy = {
         consistency_level       = "Strong"
         max_interval_in_seconds = null
@@ -50,7 +49,7 @@ locals {
       geo_location = {
         location          = ""
         failover_priority = 0
-        zone_redundant    = false
+        zone_redundant    = null
       }
       capabilities = null
       virtual_network_rule = {
@@ -61,15 +60,22 @@ locals {
       capacity           = {}
       backup = {
         type                = ""
+        tier                = null
         interval_in_minutes = null
         retention_in_hours  = null
         storage_redundancy  = null
       }
       cors_rule = {}
-      identity  = {}
+      identity = {
+        type         = null
+        identity_ids = null
+      }
       restore = {
         source_cosmosdb_account_id = ""
+        restore_timestamp_in_utc   = null
         database                   = null
+        gremlin_database           = null
+        tables_to_restore          = null
       }
       tags = {}
     }
@@ -113,7 +119,6 @@ locals {
       {
         for config in [
           "consistency_policy",
-          "geo_location",
           "capabilities",
           "virtual_network_rule",
           "analytical_storage",
@@ -124,6 +129,20 @@ locals {
           "restore",
         ] :
         config => merge(local.default.cosmosdb_account[config], local.cosmosdb_account_values[cosmosdb_account][config])
+      },
+      {
+        geo_location = try(local.cosmosdb_account_values[cosmosdb_account].geo_location.location, null) != null ? {
+          default = merge(
+            local.default.cosmosdb_account.geo_location,
+            local.cosmosdb_account_values[cosmosdb_account].geo_location
+          )
+          } : {
+          for key, value in local.cosmosdb_account_values[cosmosdb_account].geo_location :
+          key => merge(
+            local.default.cosmosdb_account.geo_location,
+            value
+          )
+        }
       }
     )
   }
